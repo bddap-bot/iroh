@@ -672,22 +672,18 @@ impl Default for Addr {
 impl From<SocketAddr> for Addr {
     fn from(value: SocketAddr) -> Self {
         match value {
+            SocketAddr::V6(addr) => match addr.ip().to_ipv4_mapped() {
+                Some(ip) => Self::Ip(SocketAddr::new(ip.into(), addr.port())),
+                None => Self::Ip(value),
+            },
             SocketAddr::V4(_) => Self::Ip(value),
-            SocketAddr::V6(addr) => {
-                Self::Ip(SocketAddr::new(addr.ip().to_canonical(), addr.port()))
-            }
         }
     }
 }
 
 impl From<&SocketAddr> for Addr {
     fn from(value: &SocketAddr) -> Self {
-        match value {
-            SocketAddr::V4(_) => Self::Ip(*value),
-            SocketAddr::V6(addr) => {
-                Self::Ip(SocketAddr::new(addr.ip().to_canonical(), addr.port()))
-            }
-        }
+        Self::from(*value)
     }
 }
 
@@ -1482,5 +1478,37 @@ mod tests {
         ) -> Poll<io::Result<()>> {
             Poll::Ready(Ok(()))
         }
+    }
+}
+
+#[cfg(test)]
+mod addr_conversion_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_ipv6_scope_and_flowinfo() {
+        let original = SocketAddr::V6(SocketAddrV6::new("fe80::1".parse().unwrap(), 4433, 42, 7));
+        assert_eq!(Addr::from(original).into_socket_addr(), Some(original));
+        assert_eq!(Addr::from(&original).into_socket_addr(), Some(original));
+    }
+
+    #[test]
+    fn canonicalizes_ipv4_mapped_addresses() {
+        let original = SocketAddr::V6(SocketAddrV6::new(
+            "::ffff:192.0.2.1".parse().unwrap(),
+            4433,
+            0,
+            0,
+        ));
+        let expected = Some("192.0.2.1:4433".parse().unwrap());
+        assert_eq!(Addr::from(original).into_socket_addr(), expected);
+        assert_eq!(Addr::from(&original).into_socket_addr(), expected);
+    }
+
+    #[test]
+    fn preserves_ipv4_addresses() {
+        let original = "192.0.2.1:4433".parse::<SocketAddr>().unwrap();
+        assert_eq!(Addr::from(original).into_socket_addr(), Some(original));
+        assert_eq!(Addr::from(&original).into_socket_addr(), Some(original));
     }
 }
