@@ -1,8 +1,8 @@
 use std::net::{Ipv6Addr, SocketAddr, SocketAddrV6, UdpSocket};
 use std::time::Duration;
 
-use iroh::endpoint::presets::Minimal;
 use iroh::endpoint::IncomingAddr;
+use iroh::endpoint::presets::Minimal;
 use iroh::{Endpoint, EndpointAddr};
 use tracing_subscriber::EnvFilter;
 
@@ -10,7 +10,11 @@ const ALPN: &[u8] = b"repro/ipv6-scope";
 const PEER: Ipv6Addr = Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 1);
 
 fn v6_port(addrs: &[SocketAddr]) -> u16 {
-    addrs.iter().find(|a| a.is_ipv6()).expect("ipv6 socket").port()
+    addrs
+        .iter()
+        .find(|a| a.is_ipv6())
+        .expect("ipv6 socket")
+        .port()
 }
 
 #[tokio::main]
