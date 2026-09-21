@@ -2433,7 +2433,6 @@ version = "0.0.0"
 dependencies = [
  "iroh",
  "tokio",
- "tracing-subscriber",
 ]
 
 [[package]]
