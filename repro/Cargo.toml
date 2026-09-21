@@ -9,4 +9,3 @@ publish = false
 [dependencies]
 iroh = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }

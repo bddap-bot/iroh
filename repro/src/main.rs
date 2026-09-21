@@ -4,7 +4,6 @@ use std::time::Duration;
 use iroh::endpoint::IncomingAddr;
 use iroh::endpoint::presets::Minimal;
 use iroh::{Endpoint, EndpointAddr};
-use tracing_subscriber::EnvFilter;
 
 const ALPN: &[u8] = b"repro/ipv6-scope";
 const PEER: Ipv6Addr = Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 1);
@@ -24,11 +23,6 @@ async fn main() {
         .expect("usage: repro <ifindex>")
         .parse()
         .expect("ifindex");
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::new("iroh::socket::transports=debug"))
-        .with_writer(std::io::stdout)
-        .without_time()
-        .init();
 
     let probe = UdpSocket::bind("[::]:0").unwrap();
     let tx = UdpSocket::bind("[::]:0").unwrap();
